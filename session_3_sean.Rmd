@@ -1,0 +1,62 @@
+---
+title: "session_3"
+author: "SMcKnight"
+date: "2/1/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+
+```{r, include = FALSE}
+### Install development versions of tmap. https://github.com/mtennekes/tmap
+
+# library(devtools)
+# install_github("mtennekes/tmaptools")
+# install_github("mtennekes/tmap")
+```
+
+
+
+### 1. Attach necessary packages
+
+We'll be using **tidiyverse**, **sf**, **tmap** packages! (sf = simple features)
+
+
+Use control + alt + i to insert a code chunk
+
+```{r, include = FALSE}
+#activate packages. 
+#using "include = FALSE will make it so this stuff doesn't show up in the knited vesion
+
+library(tidyverse)
+library(sf) #Support for simple features, a standardized way to encode spatial vector data. Binds to 'GDAL' for reading and writing data, to 'GEOS' for geometrical operations, and to 'PROJ' for projection conversions and datum transformations.
+library(tmap) #With the tmap package, thematic maps can be generated with great flexibility. The syntax for creating plots is similar to that of ggplot2, but tailored to maps
+
+```
+
+### 2. Read in CA eco-regions data
+Use the `read_sf()` function to help read all the files of a shapefile. Otherwise you'd have to read each one in individually
+
+```{r}
+# dsn = working directory where you will find these files. if you were trying to get files that weren't in your working directory, you'd give it the long tedious path, but since we're already there, you can give it a dot. In my case, i placed the data in a "data" folder so, I put "data"
+# layer = the name of the spatial data, of the file prefix name
+# When you load something as sf, the geomotry is sticky, i.e., the spatial component of the object are sticky. You can work with all the other attributes as if it were just a normal non-spatial data frame, and R is going to assume you want to retain the spatial information associated with those observations (see teh last 'geometry' field in the attributes)
+# If you %>%  and do select(US_L3NAME) it will create a new dataframe with just the US_L3NAME and the geometry will stick to it.
+# the rename() function will allow you to rename a field
+# st_simplify() will simplify the geomotry. use the dTolerance to adjust the settings. ***You wouldn't want to really do this in a real project, only doing it here to save time*** be very careful about over simplifying. Note that the st_simplify simplifies shapes individually, and doesn't take into account that the shapes should probably be touching. you can use rmshaper::ms_simplify(), geos::gSimplify() to simplify and make sure the features are touching.
+
+ca_eco <- read_sf(dsn = "data", layer = "ca_eco") %>% 
+  select(US_L3NAME) %>% 
+  rename(region = US_L3NAME) %>% 
+  st_simplify(dTolerance = 100)
+
+plot(ca_eco) # plot() is the basic plot function within R
+
+
+
+```
+
