@@ -49,13 +49,62 @@ Use the `read_sf()` function to help read all the files of a shapefile. Otherwis
 # the rename() function will allow you to rename a field
 # st_simplify() will simplify the geomotry. use the dTolerance to adjust the settings. ***You wouldn't want to really do this in a real project, only doing it here to save time*** be very careful about over simplifying. Note that the st_simplify simplifies shapes individually, and doesn't take into account that the shapes should probably be touching. you can use rmshaper::ms_simplify(), geos::gSimplify() to simplify and make sure the features are touching.
 
-ca_eco <- read_sf(dsn = "data", layer = "ca_eco") %>% 
-  select(US_L3NAME) %>% 
-  rename(region = US_L3NAME) %>% 
-  st_simplify(dTolerance = 100)
+ca_eco <- read_sf(dsn = "data", layer = "ca_eco") %>% #read in the data, assign to new variable
+  select(US_L3NAME) %>% #return only the US_L3NAME and the sticky geomoetry
+  rename(region = US_L3NAME) %>% #rename US_l3NAME to something more meaningful
+  st_simplify(dTolerance = 100) %>% #simplify the shape so it draws quicker
+  st_transform(crs = 4326) # assign a coordinate reference system of WGS84. 
 
 plot(ca_eco) # plot() is the basic plot function within R
 
+# use st_crs(ca_eco) in the console to verify the coordinate system
+
+```
+
+### 3. Read in CA Counties polygons
+
+```{r}
+ca_counties <- read_sf(dsn = "data", layer = "california_county_shape_file")
+
+st_crs(ca_counties) = 4326
+
+```
+
+
+### 4. Read in CA dams locations & data
+
+```{r}
+ca_dams <- read_sf(dsn = "data", layer = "California_Jurisdictional_Dams")
+
+```
+
+
+### 5. Make a map of dams in California, overlayed on eco-regions, with outlines of CA counties.
+
+```{r}
+# ggplot plays really nicely with sf_objects using geom_sf()
+# Remember, you always need three things to plot with ggplot(). 1. Tell it we are using ggplot, 2. tell it what data we are using, 3. Tell it what type of geomoetry we want it to produce
+
+#This maps the ca_boundaries first with a black outline and then the eco regions on top of that with a transparency.
+# ggplot(data = ca_counties) +
+#   geom_sf(color = "black",
+#           size = 0.1) +
+#   geom_sf(data = ca_eco, #when you want to add a new layer you need to add the data = ca_eco
+#           aes(fill = region), #when your color fill depends on a variable in the attributes, it has to be wrapped in the aes()
+#           alpha = 0.5, #this will adjust transparency, i.e. 50%
+#           color = "NA", #this pertains to the color around each polygon
+#           show.legend = TRUE) #if you have FALSE it will not show legend
+
+#this maps the eco regions fist, color coded by region, and then the counties on top of it with hollow fill. This is probably a better way to do it than the top.
+ggplot(data = ca_eco) +
+  geom_sf(aes(fill = region),
+          color = "NA") +
+  geom_sf(data = ca_counties,
+          fill = "NA") + 
+  geom_sf(data = ca_dams,
+          size = 0.5,
+          alpha = 0.5) +
+  theme_minimal()
 
 
 ```
