@@ -155,3 +155,66 @@ sb_clip_tmap #view the interactive map. (I guess you don't have to use ggplot or
 
 ```
 
+
+### 8. How to create an 'sf' object form lat/lon recordings (e.g. in an excel file)
+
+Make a mock dataset using tribble():
+
+```{r}
+
+my_example <- tribble( #tibble is a way to create your own little data frame (aka table)
+  ~id, ~lon, ~lat, #use the tilde to identify the columns
+  "tiger", -119.4, 34.35,
+  "lion", -119.41, 34.39,
+  "bear", -119.43, 34.38
+)
+
+# Convert this to 'sf' object: use the "st_as_sf" object which converts a foreign object to an sf object
+
+animals_sf <- st_as_sf(my_example, coords = c("lon", "lat"), crs = 4326) # the order of the coords has to match the data frame
+```
+
+Make a map using tmap!
+```{r}
+
+animal_map <- tm_basemap("Stamen.Watercolor") +
+  tm_shape(animals_sf) +
+  tm_dots(labels = "id", col = "purple", size = 0.5)
+
+animal_map
+
+```
+
+### 9. chloropleth of dam counts
+
+
+```{r}
+
+intersection <- st_intersection(x = ca_dams, y = ca_counties)
+
+dams_per_county <- intersection %>% 
+  group_by(NAME) %>% 
+  tally()
+
+ca_tot <- ca_counties %>%
+  st_join(dams_per_county) %>% 
+  select(NAME.x, n) %>% 
+  rename(name = NAME.x) #rename the weird field name
+
+ca_tot_zero <- ca_tot %>% 
+  replace_na(list(n = 0)) #where the n column is NA, replace that with 0
+
+# One more example with ggplot: 
+
+ggplot() + 
+  geom_sf(data = ca_tot_zero,
+          aes(fill = n),
+          size = 0.2,
+          color = "white") +
+  scale_fill_continuous(low = "yellow", high = "red")
+
+```
+
+### Resources: 
+vignettes for sf (google sf package in GitHub)
+"Geocomputation with R" by Robin Lovelace
