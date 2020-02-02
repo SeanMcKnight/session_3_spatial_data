@@ -109,3 +109,49 @@ ggplot(data = ca_eco) +
 
 ```
 
+### 6. Just explore SB county eco-regions using intersect
+
+```{r}
+
+sb <- ca_counties %>% 
+  filter(NAME == "Santa Barbara")
+
+# clip the eco-region data to only include informatoin ithin SB county, use the st_intersection()
+
+eco_clip <- st_intersection(ca_eco, sb)
+
+
+# now let's plot it! FIrst using ggplot2:
+ggplot() +
+  geom_sf(data = ca_counties, 
+          fill = "gray90", 
+          color = "gray80",
+          size = 0.2) + 
+  geom_sf(data = eco_clip, 
+          aes(fill = region),
+          color = "white", 
+          size = 0.4) +
+  coord_sf(xlim = c(-121, -119), ylim = c(33.5, 35.5)) + 
+  scale_fill_manual(values = c("magenta","gold2","blue"))
+
+
+```
+
+### 7. Create an interactive map with tmap
+
+
+```{r}
+
+sb_clip_tmap <- tm_basemap("Esri.WorldImagery") + #if you search ?tm_basemap in the console, you should be able to find all the diffent types of basemaps
+  tm_shape(eco_clip) + # use the eco_clip layer
+  tm_fill("region", #symbolize on region
+          palette = c("orange","purple","yellow"),
+          alpha = 0.5)
+
+tmap_mode("view") #setting to view mode allows the map to be interactive, default is static
+sb_clip_tmap #view the interactive map. (I guess you don't have to use ggplot or plot to view)
+
+
+
+```
+
